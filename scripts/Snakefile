@@ -1,0 +1,163 @@
+import os
+from glob import glob
+
+"""
+DATA_PATH = "/data/conradrw/mitonet/data/mnm_paper/"
+SCRIPT_PATH = "/home/conradrw/nbs/mitonet_v2/mandm/bootstraps/scripts/"
+WHOLE_PATH = DATA_PATH + "wholes/"
+
+DATASETS_IN = ['misteli']
+DATASETS_OUT = [f.split('/')[-1].split('.')[0] for f in glob(WHOLE_PATH + "volumes/lipko*.mrc")]
+
+MODEL_PATH = DATA_PATH + "models/"
+PATCHES_PATH = DATA_PATH + "patches/"
+RESULTS_PATH = DATA_PATH + "results/"
+
+
+rule all:
+    input:
+        #expand(RESULTS_PATH + "{dataset_in}/{dataset_out}_0.1_stats.csv", dataset_in=DATASETS_IN, dataset_out=DATASETS_OUT),
+        #expand(RESULTS_PATH + "{dataset_in}/{dataset_out}_0.5_stats.csv", dataset_in=DATASETS_IN, dataset_out=DATASETS_OUT),
+        #expand(RESULTS_PATH + "{dataset_in}/{dataset_out}_0.9_stats.csv", dataset_in=DATASETS_IN, dataset_out=DATASETS_OUT)
+        expand(RESULTS_PATH + "{dataset_in}/{dataset_out}_0.1_lm.nrrd", dataset_in=DATASETS_IN, dataset_out=DATASETS_OUT),
+        expand(RESULTS_PATH + "{dataset_in}/{dataset_out}_0.5_lm.nrrd", dataset_in=DATASETS_IN, dataset_out=DATASETS_OUT),
+        expand(RESULTS_PATH + "{dataset_in}/{dataset_out}_0.9_lm.nrrd", dataset_in=DATASETS_IN, dataset_out=DATASETS_OUT)
+
+rule make_data:
+    input:
+        WHOLE_PATH + "volumes/",
+        WHOLE_PATH + "labelmaps/"
+    params:
+        axes = [0, 1, 2],
+        spacing = 1,
+        dataset_name = "{dataset_in}"
+    output:
+        directory(PATCHES_PATH + "{dataset_in}/")
+    script:
+        SCRIPT_PATH + "create_data.py"
+        
+rule train:
+    input:
+        PATCHES_PATH + "{dataset_in}/"
+    params:
+        lr = 3e-3,
+        wd = 0.1,
+        iters = 5000,
+        bsz = 64,
+        p = 0.0,
+        experiment = "{dataset_in}_supervised"
+    output:
+        MODEL_PATH + "{dataset_in}_supervised.pth"
+    script:
+        SCRIPT_PATH + "train.py"
+        
+rule predict:
+    input:
+        WHOLE_PATH + "volumes/{dataset_out}.mrc",
+        MODEL_PATH + "{dataset_in}_supervised.pth"
+    params:
+        thresholds = [0.1, 0.5, 0.9]
+    output:
+        RESULTS_PATH + "{dataset_in}/{dataset_out}_0.1_lm.nrrd",
+        RESULTS_PATH + "{dataset_in}/{dataset_out}_0.5_lm.nrrd",
+        RESULTS_PATH + "{dataset_in}/{dataset_out}_0.9_lm.nrrd"
+    script:
+        SCRIPT_PATH + "predict.py"
+
+rule validate1:
+    input:
+        WHOLE_PATH + "volumes/{dataset_out}.mrc",
+        WHOLE_PATH + "labelmaps/{dataset_out}.mrc",
+        RESULTS_PATH + "{dataset_in}/{dataset_out}_0.1_lm.nrrd"
+    output:
+        RESULTS_PATH + "{dataset_in}/{dataset_out}_0.1_stats.csv",
+    script:
+        SCRIPT_PATH + "semantic_statistics.py"
+        
+rule validate2:
+    input:
+        WHOLE_PATH + "volumes/{dataset_out}.mrc",
+        WHOLE_PATH + "labelmaps/{dataset_out}.mrc",
+        RESULTS_PATH + "{dataset_in}/{dataset_out}_0.5_lm.nrrd"
+    output:
+        RESULTS_PATH + "{dataset_in}/{dataset_out}_0.5_stats.csv",
+    script:
+        SCRIPT_PATH + "semantic_statistics.py"
+
+rule validate3:
+    input:
+        WHOLE_PATH + "volumes/{dataset_out}.mrc",
+        WHOLE_PATH + "labelmaps/{dataset_out}.mrc",
+        RESULTS_PATH + "{dataset_in}/{dataset_out}_0.9_lm.nrrd"
+    output:
+        RESULTS_PATH + "{dataset_in}/{dataset_out}_0.9_stats.csv",
+    script:
+        SCRIPT_PATH + "semantic_statistics.py"
+"""
+
+DATA_PATH = "/data/conradrw/mitonet/data/mnm_paper/"
+SCRIPT_PATH = "/home/conradrw/nbs/mitonet/experiments/mandm/bootstraps/scripts/"
+WHOLE_PATH = DATA_PATH + "wholes/"
+
+dataset_in = 'lipko'
+dataset_out = 'lipko_sampe_cell1'
+WHOLE_SET = [f.split('/')[-1].split('.')[0] for f in glob(WHOLE_PATH + f"volumes/{dataset_out}*.nrrd")]
+BETAS = [0.8]
+
+MODEL_PATH = DATA_PATH + "models/"
+PATCHES_PATH = DATA_PATH + "patches/"
+RESULTS_PATH = DATA_PATH + "results/"
+
+rule all:
+    input:
+        PATCHES_PATH + dataset_out + "/",
+        expand(RESULTS_PATH + dataset_in + "/{whole_out}_weak_stats_beta_{beta}_random_drop_0.5.csv", whole_out=WHOLE_SET,
+               beta=BETAS)
+
+rule make_data:
+    input:
+        WHOLE_PATH + "volumes/",
+        RESULTS_PATH + dataset_in + "/"
+    params:
+        axes = [0, 1, 2],
+        spacing = 1,
+        dataset_name = dataset_out
+    output:
+        directory(PATCHES_PATH + dataset_out + "/")
+    script:
+        SCRIPT_PATH + "create_weak_data.py"
+        
+rule train:
+    input:
+        PATCHES_PATH + dataset_out + "/"
+    params:
+        lr = 3e-3,
+        wd = 0.1,
+        iters = 5000,
+        bsz = 64,
+        p = 0.5,
+        experiment = dataset_in + "_" + dataset_out + "_weakly_supervised",
+        beta = "{beta}"
+    output:
+        MODEL_PATH + dataset_in + "_" + dataset_out + "_weakly_supervised_beta_{beta}_random_drop_0.5.pth"
+    script:
+        SCRIPT_PATH + "weak_train.py"
+
+rule predict:
+    input:
+        WHOLE_PATH + "volumes/{whole_out}.nrrd",
+        MODEL_PATH + dataset_in + "_" + dataset_out + "_weakly_supervised_beta_{beta}_random_drop_0.5.pth"
+    output:
+        RESULTS_PATH + dataset_in + "/{whole_out}_weak_{beta}_random_drop_0.5.nrrd"
+    script:
+        SCRIPT_PATH + "predict.py"
+
+rule validate:
+    input:
+        WHOLE_PATH + "volumes/{whole_out}.nrrd",
+        WHOLE_PATH + "labelmaps/{whole_out}.nrrd",
+        RESULTS_PATH + dataset_in + "/{whole_out}_weak_{beta}_random_drop_0.5.nrrd"
+    output:
+        RESULTS_PATH + dataset_in + "/{whole_out}_weak_stats_beta_{beta}_random_drop_0.5.csv",
+    script:
+        SCRIPT_PATH + "semantic_statistics.py"
