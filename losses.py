@@ -15,7 +15,7 @@ class BootstrapDiceLoss(nn.Module):
     
     Arguments:
     ----------
-    beta: Float, in the range (0, 1). Beta == 0 is equivalent to regular dice loss. 
+    beta: Float, in the range (0, 1). Beta = 1 is equivalent to regular dice loss. 
     Controls the level of mixing between the noisy ground truth and the model's own 
     predictions. Default 0.8.
     
