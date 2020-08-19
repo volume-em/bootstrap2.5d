@@ -37,6 +37,19 @@ class EMAMeter:
         self.avg = self.sum / (1 - self.mom ** (self.count))
 
 def calculate_iou(output, target):
+    """
+    Calculates the mean iou of all classes in the segmentation mask.
+    
+    Arguments:
+    ----------
+    output: Logits of predicted segmentation mask of size (B, N_CLASSES, H, W).
+    target: Ground truth segmentation mask of size (B, H, W) or (B, 1, H, W).
+    
+    Returns:
+    --------
+    mean_iou: Float in range [0, 1].
+    
+    """
     #make target the same shape as output by unsqueezing
     #the channel dimension, if needed
     if target.ndim == output.ndim - 1:
@@ -72,6 +85,8 @@ def calculate_iou(output, target):
     union = torch.sum(output + target, dims) - intersect
 
     #avoid division errors by adding a small epsilon
-    iou = (intersect + 1e-7) / (union + 1e-7)
+    #also guarantees that iou = 1 when ground truth
+    #and prediction segmentations are empty
+    iou = (intersect + 1e-5) / (union + 1e-5)
 
-    return iou
+    return iou.mean().item()
