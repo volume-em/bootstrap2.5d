@@ -10,7 +10,7 @@ RESULTS_PATH = DATA_PATH + "results/"
 TRAINING_IMDIR = "./"
 TRAINING_MSKDIR = "./"
 
-TARGET_VOLUME_IMAGE = ""
+TARGET_IMDIR = ""
 
 
 rule all:
@@ -45,7 +45,7 @@ rule train_data_to_patches:
     script:
         SCRIPT_PATH + "train_data_to_patches.py"
         
-rule train:
+rule train_supervised:
     input:
         PATCHES_PATH
     params:
@@ -65,8 +65,8 @@ rule train:
         
 rule predict:
     input:
-        WHOLE_PATH + "volumes/{dataset_out}.mrc",
-        MODEL_PATH + "{dataset_in}_supervised.pth"
+        TARGET_IMDIR,
+        os.path.join(MODEL_PATH, "supervised.pth")
     params:
         thresholds = [0.1, 0.5, 0.9]
     output:

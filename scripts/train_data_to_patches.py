@@ -3,7 +3,6 @@ import argparse
 import numpy as np
 import SimpleITK as sitk
 from glob import glob
-from tqdm import tqdm
 
 def parse_args():
     #setup the argument parser

@@ -1,5 +1,6 @@
 import os, sys, argparse
 import numpy as np
+import torch.backends.cudnn as cudnn
 
 from albumentations import (
     Compose, ShiftScaleRotate, PadIfNeeded, RandomCrop, Normalize, HorizontalFlip, VerticalFlip,
@@ -8,16 +9,14 @@ from albumentations import (
 )
 from albumentations.pytorch import ToTensorV2
 
+#assumes the python modules are in the up directory from scripts
+sys.path.append('../')
 from losses import BootstrapDiceLoss
 from deeplab import DeepLabV3
 from data import SegmentationData
 from torch.optim import AdamW
 from torch.utils.data import DataLoader
 from train_utils import Trainer
-
-import torch.backends.cudnn as cudnn
-
-MOCO_WEIGHTS = "/data/IASEM/conradrw/models/MoCoV2/current.pth.tar"
 
 def parse_args():
     #setup the argument parser
