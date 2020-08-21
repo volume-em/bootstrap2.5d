@@ -11,19 +11,15 @@ TRAINING_MSKDIR = "./" #directory containing training label volumes
 
 TARGET_PATCHES_PATH = DATA_PATH + "target_patches2d/" #location to save 2d noisy ground truth images
 TARGET_IMDIR = "./" #directory containing target image volumes
-TARGET_PRED_SUPER_DIR = "./" #directory to save supervised prediction volumes
-TARGET_PRED_WEAKSUPER_DIR = "./" #directory to save weakly supervised prediction volumes
+TARGET_PRED_SUPER_DIR = "./super_dir" #directory to save supervised prediction volumes
+TARGET_PRED_WEAKSUPER_DIR = "./weaksuper_dir" #directory to save weakly supervised prediction volumes
 
 RESNET_ARCH = "resnet34"
 
 rule all:
     input:
-        #expand(RESULTS_PATH + "{dataset_in}/{dataset_out}_0.1_stats.csv", dataset_in=DATASETS_IN, dataset_out=DATASETS_OUT),
-        #expand(RESULTS_PATH + "{dataset_in}/{dataset_out}_0.5_stats.csv", dataset_in=DATASETS_IN, dataset_out=DATASETS_OUT),
-        #expand(RESULTS_PATH + "{dataset_in}/{dataset_out}_0.9_stats.csv", dataset_in=DATASETS_IN, dataset_out=DATASETS_OUT)
-        expand(RESULTS_PATH + "{dataset_in}/{dataset_out}_0.1_lm.nrrd", dataset_in=DATASETS_IN, dataset_out=DATASETS_OUT),
-        expand(RESULTS_PATH + "{dataset_in}/{dataset_out}_0.5_lm.nrrd", dataset_in=DATASETS_IN, dataset_out=DATASETS_OUT),
-        expand(RESULTS_PATH + "{dataset_in}/{dataset_out}_0.9_lm.nrrd", dataset_in=DATASETS_IN, dataset_out=DATASETS_OUT)
+        TARGET_PRED_SUPER_DIR,
+        TARGET_PRED_WEAKSUPER_DIR
 
         
 #----------------------------------
