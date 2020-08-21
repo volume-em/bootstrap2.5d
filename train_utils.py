@@ -19,7 +19,7 @@ if in_notebook:
 else:
     from tqdm import tqdm
     
-class DataFetcher():
+class DataFetcher:
     """
     Loads batches of images and masks from a dataloader onto the gpu.
     """

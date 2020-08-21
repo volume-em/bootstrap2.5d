@@ -1,17 +1,16 @@
 import os
-from glob import glob
 
-"""
-DATA_PATH = "/data/conradrw/mitonet/data/mnm_paper/"
-SCRIPT_PATH = "/home/conradrw/nbs/mitonet_v2/mandm/bootstraps/scripts/"
-WHOLE_PATH = DATA_PATH + "wholes/"
+SCRIPT_PATH = "./"
 
-DATASETS_IN = ['misteli']
-DATASETS_OUT = [f.split('/')[-1].split('.')[0] for f in glob(WHOLE_PATH + "volumes/lipko*.mrc")]
-
+DATA_PATH = "./"
 MODEL_PATH = DATA_PATH + "models/"
-PATCHES_PATH = DATA_PATH + "patches/"
+PATCHES_PATH = DATA_PATH + "patches2d/"
 RESULTS_PATH = DATA_PATH + "results/"
+
+TRAINING_IMDIR = "./"
+TRAINING_MSKDIR = "./"
+
+TARGET_VOLUME_IMAGE = ""
 
 
 rule all:
@@ -23,28 +22,38 @@ rule all:
         expand(RESULTS_PATH + "{dataset_in}/{dataset_out}_0.5_lm.nrrd", dataset_in=DATASETS_IN, dataset_out=DATASETS_OUT),
         expand(RESULTS_PATH + "{dataset_in}/{dataset_out}_0.9_lm.nrrd", dataset_in=DATASETS_IN, dataset_out=DATASETS_OUT)
 
-rule make_data:
+#take the volumes in imdir and mskdir and save the 2d cross sections to PATCHES_PATH
+#this script/rule assumes a directory structure like:
+#data/
+#    images/
+#        volume1.tiff
+#        volume2.tiff
+#    masks/
+#        volume1.tiff
+#        volume2.tiff
+#imdir = data/images/ and mskdir = data/masks/
+rule train_data_to_patches:
     input:
-        WHOLE_PATH + "volumes/",
-        WHOLE_PATH + "labelmaps/"
+        TRAINING_IMDIR,
+        TRAINING_MSKDIR
     params:
         axes = [0, 1, 2],
         spacing = 1,
         dataset_name = "{dataset_in}"
     output:
-        directory(PATCHES_PATH + "{dataset_in}/")
+        directory(os.path.join(PATCHES_PATH, "train"))
     script:
-        SCRIPT_PATH + "create_data.py"
+        SCRIPT_PATH + "train_data_to_patches.py"
         
 rule train:
     input:
-        PATCHES_PATH + "{dataset_in}/"
+        os.path.join(PATCHES_PATH, "train")
     params:
         lr = 3e-3,
         wd = 0.1,
         iters = 5000,
         bsz = 64,
-        p = 0.0,
+        p = 0.5,
         experiment = "{dataset_in}_supervised"
     output:
         MODEL_PATH + "{dataset_in}_supervised.pth"

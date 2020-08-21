@@ -1,22 +1,14 @@
-import os, sys, argparse, mlflow
+import os, sys, argparse
 import numpy as np
-#from torchvision.models import resnet34
+from torchvision.models import resnet34
 
 from albumentations import (
     Compose, ShiftScaleRotate, PadIfNeeded, RandomCrop, Normalize, HorizontalFlip, VerticalFlip,
     ElasticTransform, RandomBrightnessContrast, CenterCrop, CropNonEmptyMaskIfExists, RandomResizedCrop,
     GaussNoise, Rotate
 )
-
 from albumentations.pytorch import ToTensorV2
 
-sys.path.append('/home/conradrw/nbs/moco_official/')
-from moco.resnet import resnet50 as moco_resnet50
-
-sys.path.append('/home/conradrw/nbs/mitonet/2d/')
-sys.path.append('/home/conradrw/nbs/mitonet/utils/')
-
-from metrics import IoU, Dice, BalancedAccuracy, ComposeMetrics
 from losses import DiceLoss
 from deeplab import DeepLabV3
 from data import MitoData
@@ -33,12 +25,13 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Train a model on given dataset')
     parser.add_argument('data_path', type=str, metavar='data_path', help='Path containing tiff label images')
     parser.add_argument('save_path', type=str, metavar='save_path', help='Path to save model state')
-    parser.add_argument('experiment', type=str, metavar='save_path', help='mlflow experiment name')
     parser.add_argument('-lr', type=str, metavar='lr', help='learning rate')
     parser.add_argument('-wd', type=str, metavar='wd', help='weight decay')
     parser.add_argument('-iters', type=str, metavar='iters', help='total training iterations')
     parser.add_argument('-bsz', type=str, metavar='bsz', help='batch size')
     parser.add_argument('-p', type=str, metavar='p', help='dropout p')
+    parser.add_argument('--resume', type=str, metavar='p', help='Path to model state for resuming training', 
+                        default='')
     
     args = vars(parser.parse_args())
     
