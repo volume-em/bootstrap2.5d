@@ -15,6 +15,8 @@ def parse_args():
                         help='Volume axes along which to slice (0-yz, 1-xz, 2-xy)')
     parser.add_argument('-s', '--spacing', dest='spacing', type=int, metavar='spacing', default=1,
                         help='Spacing between image slices')
+    parser.add_argument('-eval_frac', 'eval_frac', dest='eval_frac', type=float, metavar='eval_frac', default=0.15,
+                        help='Fraction of total images and masks to use for validation dataset [0, 1]')
     
     args = vars(parser.parse_args())
     return args
@@ -41,19 +43,20 @@ if __name__ == "__main__":
     save_path = args['save_path']
     axes = args['axes']
     spacing = args['spacing']
+    eval_frac = args['eval_frac']
 
-    #create images and masks directories in save_path
-    #if they do not already exist
+    #create save path
     if not os.path.exists(save_path):
         os.mkdir(save_path)
-
-    images_path = os.path.join(save_path, 'images')
-    if not os.path.exists(images_path):
-        os.mkdir(images_path)
+        
+    #create train directory in save_path
+    #if they do not already exist
+    train_path = os.path.join(save_path, 'train')
+    if not os.path.exists(train_path):
+        os.mkdir(train_path)
+        os.mkdir(os.path.join(train_path, 'images'))
+        os.mkdir(os.path.join(train_path, 'masks'))
     
-    masks_path = os.path.join(save_path, 'masks')
-    if not os.path.exists(masks_path):
-        os.mkdir(masks_path)
         
     #glob the lists of image and mask volumes
     impaths = np.sort(glob(os.path.join(imdir, '*')))
@@ -91,5 +94,27 @@ if __name__ == "__main__":
                     image_slice = image[:, :, idx]
                     labelmap_slice = labelmap[:, :, idx]
 
-                sitk.WriteImage(image_slice, os.path.join(images_patch, slice_name))
-                sitk.WriteImage(labelmap_slice, os.path.join(masks_path, slice_name))
+                sitk.WriteImage(image_slice, os.path.join(os.path.join(train_path, 'images'), slice_name))
+                sitk.WriteImage(labelmap_slice, os.path.join(os.path.join(train_path, 'masks'), slice_name))
+                
+    #if eval frac is greater than 0, move some images and masks to
+    #the valid folder
+    if eval_frac > 0:
+        #create validation directories
+        valid_path = os.path.join(save_path, 'valid')
+        if not os.path.exists(valid_path):
+            os.mkdir(valid_path)
+            os.mkdir(os.path.join(valid_path, 'images'))
+            os.mkdir(os.path.join(valid_path, 'masks'))
+            
+        #get the list of images and masks in train directory
+        train_images = np.sort(glob(os.path.join(train_path, 'images/*.tiff')))
+        train_masks = np.sort(glob(os.path.join(train_path, 'masks/*.tiff')))
+        
+        #create a mask to randomly select images
+        mask = np.random.random(len(train_images)) < eval_frac
+        for imp, mskp in zip(train_images[mask], train_masks[mask]):
+            os.rename(imp, imp.replace('train', 'valid'))
+            os.rename(mskp, mskp.replace('train', 'valid'))
+            
+        print(f'Saved {mask.sum()} images for validation dataset.')

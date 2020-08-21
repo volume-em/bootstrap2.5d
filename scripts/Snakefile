@@ -39,24 +39,27 @@ rule train_data_to_patches:
     params:
         axes = [0, 1, 2],
         spacing = 1,
-        dataset_name = "{dataset_in}"
+        eval_frac = 0.15
     output:
-        directory(os.path.join(PATCHES_PATH, "train"))
+        directory(PATCHES_PATH)
     script:
         SCRIPT_PATH + "train_data_to_patches.py"
         
 rule train:
     input:
-        os.path.join(PATCHES_PATH, "train")
+        PATCHES_PATH
     params:
         lr = 3e-3,
         wd = 0.1,
         iters = 5000,
         bsz = 64,
         p = 0.5,
-        experiment = "{dataset_in}_supervised"
+        beta = 1, #no bootstrapping
+        resnet_arch = 'resnet34',
+        ft_layer = 'layer4',
+        resume = '' #resuming is not compatible with scripts run by Snakemake
     output:
-        MODEL_PATH + "{dataset_in}_supervised.pth"
+        os.path.join(MODEL_PATH, "supervised.pth")
     script:
         SCRIPT_PATH + "train.py"
         

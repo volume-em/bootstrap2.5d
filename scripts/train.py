@@ -1,6 +1,5 @@
 import os, sys, argparse
 import numpy as np
-from torchvision.models import resnet34
 
 from albumentations import (
     Compose, ShiftScaleRotate, PadIfNeeded, RandomCrop, Normalize, HorizontalFlip, VerticalFlip,
@@ -9,9 +8,9 @@ from albumentations import (
 )
 from albumentations.pytorch import ToTensorV2
 
-from losses import DiceLoss
+from losses import BootstrapDiceLoss
 from deeplab import DeepLabV3
-from data import MitoData
+from data import SegmentationData
 from torch.optim import AdamW
 from torch.utils.data import DataLoader
 from train_utils import Trainer
@@ -25,13 +24,20 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Train a model on given dataset')
     parser.add_argument('data_path', type=str, metavar='data_path', help='Path containing tiff label images')
     parser.add_argument('save_path', type=str, metavar='save_path', help='Path to save model state')
-    parser.add_argument('-lr', type=str, metavar='lr', help='learning rate')
-    parser.add_argument('-wd', type=str, metavar='wd', help='weight decay')
-    parser.add_argument('-iters', type=str, metavar='iters', help='total training iterations')
-    parser.add_argument('-bsz', type=str, metavar='bsz', help='batch size')
-    parser.add_argument('-p', type=str, metavar='p', help='dropout p')
+    parser.add_argument('-n', type=int, metavar='n', help='number of segmentation classes')
+    parser.add_argument('-lr', type=float, metavar='lr', help='learning rate')
+    parser.add_argument('-wd', type=float, metavar='wd', help='weight decay')
+    parser.add_argument('-iters', type=int, metavar='iters', help='total training iterations')
+    parser.add_argument('-bsz', type=int, metavar='bsz', help='batch size')
+    parser.add_argument('-p', type=float, metavar='p', help='dropout p')
+    parser.add_argument('-beta', type=float, metavar='beta', help='dice loss beta value [0, 1]')
+    
+    parser.add_argument('--resnet_arch', dest='resnet_arch', type=str, metavar='resnet_arch', 
+                        default='resnet34', choices=['resnet18', 'resnet34', 'resnet50'], help='resnet model to use as deeplab backbone')
+    parser.add_argument('--ft_layer', dest='ft_layer', type=str, metavar='ft_layer', 
+                        default='none', help='resnet layers to finetune: none, layer4, layer3, layer2, layer1, all')
     parser.add_argument('--resume', type=str, metavar='p', help='Path to model state for resuming training', 
-                        default='')
+                        default=None)
     
     args = vars(parser.parse_args())
     
@@ -41,102 +47,93 @@ def snakemake_args():
     params = vars(snakemake.params)
     params['data_path'] = snakemake.input[0]
     params['save_path'] = snakemake.output[0]
+    del params['_names']
     
     return params
 
-#args = parse_args()
-args = snakemake_args()
+if __name__ == "__main__":
+    #determine if the script is being run by Snakemake
+    if 'snakemake' in globals():
+        args = snakemake_args()
+    else:
+        args = parse_args()
 
-data_path = args['data_path']
-save_path = args['save_path']
-lr = args['lr']
-wd = args['wd']
-iters = args['iters']
-bsz = args['bsz']
-p = args['p']
-experiment = args['experiment']
+    data_path = args['data_path']
+    save_path = args['save_path']
+    num_classes = args['n']
+    lr = args['lr']
+    wd = args['wd']
+    iters = args['iters']
+    bsz = args['bsz']
+    p = args['p']
+    beta = args['beta']
+    resnet_arch = args['resnet_arch']
+    finetune_layer = args['ft_layer']
+    resume = args['resume']
 
-#load the train file names
-trn_impath = data_path + 'images/'
-trn_mskpath = data_path + 'masks/'
-trn_fnames = np.array(next(os.walk(trn_impath))[2])
-
-#set the transforms to use, we're using imagenet
-#pretrained models, so we want to use the default
-#normalization parameters and copy our input image
-#channels such that there are 3 (RGB)
-tfs = Compose([
-    PadIfNeeded(min_height=224, min_width=224),
-    RandomResizedCrop(224, 224, (0.6, 1.0)),
-    RandomBrightnessContrast(),
-    #Rotate(),
-    HorizontalFlip(),
-    VerticalFlip(),
-    GaussNoise(var_limit=(5.0, 20.0), p=0.25),
-    Normalize(),
-    ToTensorV2()
-])
-
-#create pytorch datasets
-trn_data = MitoData(trn_impath, trn_mskpath, trn_fnames, tfs)
-
-#use the batch size that we defined in the arguments
-#but the batch size should not be greater than the number 
-#of images in the trn_fnames
-bsz = min(bsz, len(trn_fnames))
-train = DataLoader(trn_data, batch_size=bsz, shuffle=True, pin_memory=True, num_workers=8, drop_last=True)
-
-#create model
-resnet = moco_resnet50()
-
-#load the state dict for mocov2
-checkpoint = torch.load(MOCO_WEIGHTS, map_location="cpu")
-
-# rename moco pre-trained keys
-state_dict = checkpoint['state_dict']
-for k in list(state_dict.keys()):
-    # retain only encoder_q up to before the embedding layer
-    if k.startswith('module.encoder_q') and not k.startswith('module.encoder_q.fc'):
-        # remove prefix
-        state_dict[k[len("module.encoder_q."):]] = state_dict[k]
-        #for unet, we need to add encoder to the prefix
-        if model_name == 'unet':
-            state_dict['encoder.' + k[len("module.encoder_q."):]] = state_dict[k[len("module.encoder_q."):]]
-            del state_dict[k[len("module.encoder_q."):]]
-
-    # delete renamed or unused k
-    del state_dict[k]
+    #set the transforms to use, we're using imagenet
+    #pretrained models, so we want to use the default
+    #normalization parameters and copy our input image
+    #channels such that there are 3 (RGB)
+    tfs = Compose([
+        PadIfNeeded(min_height=224, min_width=224),
+        CropNonEmptyMaskIfExists(256, 256, p=0.8)
+        RandomResizedCrop(224, 224, (0.6, 1.0)),
+        RandomBrightnessContrast(),
+        #Rotate(),
+        HorizontalFlip(),
+        VerticalFlip(),
+        GaussNoise(var_limit=(5.0, 20.0), p=0.25),
+        Normalize(),
+        ToTensorV2()
+    ])
+    
+    eval_tfs = Compose([
+        PadIfNeeded(min_height=224, min_width=224),
+        CenterCrop(224, 224),
+        Normalize(),
+        ToTensorV2()
+    ])
 
 
-msg = resnet.load_state_dict(state_dict, strict=False)
-model = DeepLabV3(resnet, 1, drop_p=p)
+    #create pytorch datasets
+    #use the batch size that we defined in the arguments
+    #but the batch size should not be greater than the number 
+    #of images in the trn_data
+    trn_data = SegmentationData(os.path.join(data_path, 'train'), tfs)
+    bsz = min(bsz, len(trn_data))
+    train = DataLoader(trn_data, batch_size=bsz, shuffle=True, pin_memory=True, num_workers=8, drop_last=True)
+    
+    #make validation loader, if validation data exists
+    if os.path.exists(os.path.join(data_path, 'valid')):
+        val_data = SegmentationData(os.path.join(data_path, 'valid'), tfs)
+        valid = DataLoader(val_data, batch_size=1, shuffle=False, pin_memory=True, num_workers=8, drop_last=False)
+    else:
+        valid = None
 
-#best to use differential learning rates, so define the param_groups
-#and optimizer with best hyperparameters
-param_groups = [
-    {'params': model.backbone.parameters()},
-    {'params': model.aspp.parameters()},
-    {'params': model.decoder.parameters()}
-]
+    #create deeplab model
+    model = DeepLabV3(num_classes, resnet_arch, pretrained=True, drop_p=p)
+    
+    #freeze weights in resnet based on the given finetune layer
+    encoder_groups = [mod[1] for mod in model.encoder.resnet.named_children()]
+    if finetune_layer != 'none':
+        layer_index = {'all': 0, 'layer1': 4, 'layer2': 5, 'layer3': 6, 'layer4': 7}
+        start_layer = layer_index[finetune_layer]
 
-optim = AdamW(param_groups, lr=lr, weight_decay=wd)
-loss = DiceLoss()
+        #always finetune from the start layer to the last layer in the resnet
+        for group in encoder_groups[start_layer:]:
+            for param in group.parameters():
+                param.requires_grad = True
+                
+    model_parameters = filter(lambda p: p.requires_grad, model.parameters())
+    params = sum([np.prod(p.size()) for p in model_parameters])
+    print(f'Froze resnet weights before {finetune_layer}. Using model with {params} trainable parameters!')
 
-#define metrics and class names
-cn = ['Mito']
-md = {'IoU': IoU(), 'Dice': Dice(), 'BalAcc': BalancedAccuracy()}
-metrics = ComposeMetrics(md, cn)
+    #use AdamW optimizer and bootstrapped dice loss
+    optim = AdamW(model.parameters(), lr=lr, weight_decay=wd)
+    criterion = BootstrapDiceLoss(beta=beta)
 
-logging_params = {
-    'experiment_name': experiment, 'max_lr': str(lr), 'batch_size': str(bsz), 'lr_schedule': 'one_cycle',
-    'dropout': str(p), 'optimizer': 'AdamW', 'loss': 'SoftDice', 'architecture': 'DeepLabV3+,Resnet34',
-    'augmentations': 'random_resized_crops, flips, brightness, rotate90, noise', 
-    'pretraining': 'imagenet, unfreeze layer 4', 'iterations': str(iters), 'weight_path': save_path
-}
-
-trainer = Trainer(model, optim, loss, train, val_data=None, metrics=metrics, logging=logging_params)
-
-for param in trainer.model.backbone[7].parameters():
-    param.requires_grad = True
-
-trainer.train_one_cycle(iters, lr, iters // 50, save_path=save_path)
+    #train the model with one cycle policy
+    cudnn.benchmark = True
+    trainer = Trainer(model, optim, criterion, train, valid)
+    trainer.train_one_cycle(iters, lr, iters // 10, save_path=save_path, resume=resume)
