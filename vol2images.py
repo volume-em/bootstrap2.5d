@@ -92,20 +92,21 @@ if __name__ == "__main__":
                 sitk.WriteImage(labelmap_slice, os.path.join(os.path.join(train_path, 'masks'), slice_name))
                 
     #create validation directories
-    valid_path = train_path.replace('train2d', 'valid2d')
-    os.mkdir(valid_path)
-    os.mkdir(os.path.join(valid_path, 'images'))
-    os.mkdir(os.path.join(valid_path, 'masks'))
+    if eval_frac > 0:
+        valid_path = train_path.replace('train2d', 'valid2d')
+        os.mkdir(valid_path)
+        os.mkdir(os.path.join(valid_path, 'images'))
+        os.mkdir(os.path.join(valid_path, 'masks'))
 
-    #get the list of images and masks in train directory
-    train_images = np.sort(glob(os.path.join(train_path, 'images/*.tiff')))
-    train_masks = np.sort(glob(os.path.join(train_path, 'masks/*.tiff')))
+        #get the list of images and masks in train directory
+        train_images = np.sort(glob(os.path.join(train_path, 'images/*.tiff')))
+        train_masks = np.sort(glob(os.path.join(train_path, 'masks/*.tiff')))
 
-    #create a mask to randomly select images
-    mask = np.random.random(len(train_images)) < eval_frac
-    for imp, mskp in zip(train_images[mask], train_masks[mask]):
-        assert(imp.replace('images', 'kitty') == mskp.replace('masks', 'kitty'))
-        os.rename(imp, imp.replace('train', 'valid'))
-        os.rename(mskp, mskp.replace('train', 'valid'))
+        #create a mask to randomly select images
+        mask = np.random.random(len(train_images)) < eval_frac
+        for imp, mskp in zip(train_images[mask], train_masks[mask]):
+            assert(imp.replace('images', 'kitty') == mskp.replace('masks', 'kitty'))
+            os.rename(imp, imp.replace('train', 'valid'))
+            os.rename(mskp, mskp.replace('train', 'valid'))
 
-    print(f'Saved {mask.sum()} images for validation dataset.')
+        print(f'Saved {mask.sum()} images for validation dataset.')

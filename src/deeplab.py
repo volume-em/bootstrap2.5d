@@ -249,7 +249,7 @@ class DeepLabV3(nn.Module):
         encoder_features = self.encoder(x)
         
         #run the output of the resnet encoder through the aspp layer
-        x = self.aspp(self.dropout(encoder_features[-1]))
+        x = self.dropout(self.aspp(encoder_features[-1]))
         
         #apply dropout to the output from layer1 of the encoder resnet
         #and feed it to the decoder along with the output from the aspp module

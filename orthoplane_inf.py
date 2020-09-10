@@ -1,12 +1,9 @@
 import numpy as np
-import os, sys, argparse, warnings, cv2
+import os, sys, argparse, cv2
 import torch
 import torch.nn as nn
 import SimpleITK as sitk
-from skimage import io
 from glob import glob
-from tqdm import tqdm
-from torch.utils.data import DataLoader
 
 from albumentations import Compose, Normalize
 from albumentations.pytorch import ToTensorV2

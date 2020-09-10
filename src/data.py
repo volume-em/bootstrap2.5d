@@ -1,6 +1,5 @@
 import os, cv2
 from torch.utils.data import Dataset
-from skimage.io import imread
 
 class SegmentationData(Dataset):
     """
@@ -53,8 +52,8 @@ class SegmentationData(Dataset):
     def __getitem__(self, idx):
         #load the image and mask files
         f = self.fnames[idx]
-        image = imread(os.path.join(self.impath, f))
-        mask = imread(os.path.join(self.mskpath, f))
+        image = cv2.imread(os.path.join(self.impath, f), 0)
+        mask = cv2.imread(os.path.join(self.mskpath, f), 0)
         
         #albumentations expects a channel dimension
         #there can be three or one
