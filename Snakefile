@@ -1,18 +1,18 @@
 import os
 
-SCRIPT_PATH = "./"
+SCRIPT_PATH = "scripts/"
 
-DATA_PATH = "./"
-MODEL_PATH = DATA_PATH + "models/"
+DATA_PATH = "data/"
+MODEL_PATH = "models/"
 
-TRAIN_PATCHES_PATH = DATA_PATH + "train_patches2d/" #location to save 2d training images
-TRAINING_IMDIR = "./" #directory containing training image volumes
-TRAINING_MSKDIR = "./" #directory containing training label volumes
+TRAIN_PATCHES_PATH = DATA_PATH + "train2d/" #location to save 2d training images
+TRAINING_IMDIR = DATA_PATH + "train/images/" #directory containing training image volumes
+TRAINING_MSKDIR = DATA_PATH + "train/masks/" #directory containing training label volumes
 
-TARGET_PATCHES_PATH = DATA_PATH + "target_patches2d/" #location to save 2d noisy ground truth images
-TARGET_IMDIR = "./" #directory containing target image volumes
-TARGET_PRED_SUPER_DIR = "./super_dir" #directory to save supervised prediction volumes
-TARGET_PRED_WEAKSUPER_DIR = "./weaksuper_dir" #directory to save weakly supervised prediction volumes
+TARGET_PATCHES_PATH = DATA_PATH + "target2d/" #location to save 2d noisy ground truth images
+TARGET_IMDIR = DATA_PATH + "target/images/" #directory containing target image volumes
+TARGET_PRED_SUPER_DIR = DATA_PATH + "target/super_preds/" #directory to save supervised prediction volumes
+TARGET_PRED_WEAKSUPER_DIR = DATA_PATH + "target/weaksuper_preds/" #directory to save weakly supervised prediction volumes
 
 RESNET_ARCH = "resnet34"
 
@@ -60,7 +60,7 @@ rule train_supervised:
         n = 1, #number of segmentation classes in the mask
         lr = 3e-3, #maximum learning rate in OneCycle policy
         wd = 0.1, #weight decay
-        iters = 5000, #total training iterations
+        iters = 1000, #total training iterations
         bsz = 64, #batch size, no smaller than 16
         p = 0.5, #dropout probability
         beta = 1, #no bootstrapping
@@ -98,7 +98,7 @@ rule target_data_to_patches:
     params:
         axes = [0, 1, 2],
         spacing = 1,
-        eval_frac = 0.0 #validation data is meaningless in this step
+        eval_frac = 0.0 #validation data is meaningless in this step, because there isn't a real ground truth
     output:
         directory(TARGET_PATCHES_PATH)
     script:
@@ -111,7 +111,7 @@ rule train_weakly_supervised:
         n = 1, #number of segmentation classes in the mask
         lr = 3e-3, #maximum learning rate in OneCycle policy
         wd = 0.1, #weight decay
-        iters = 5000, #total training iterations
+        iters = 1000, #total training iterations
         bsz = 64, #batch size, no smaller than 16
         p = 0.5, #dropout probability
         beta = 1, #no bootstrapping

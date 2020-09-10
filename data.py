@@ -36,7 +36,7 @@ class SegmentationData(Dataset):
     """
     
     def __init__(self, data_dir, tfs=None, gray_channels=3):
-        super(MitoData, self).__init__()
+        super(SegmentationData, self).__init__()
         self.data_dir = data_dir
         self.impath = os.path.join(data_dir, 'images')
         self.mskpath = os.path.join(data_dir, 'masks')

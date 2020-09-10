@@ -75,7 +75,7 @@ class Encoder(nn.Module):
         resnet.layer4[0].downsample[0].stride = (1, 1)
         
         #delete the average pooling and fc layers
-        del renset.avgpool
+        del resnet.avgpool
         del resnet.fc
         
         self.resnet = resnet
@@ -175,7 +175,7 @@ class ASPP(nn.Module):
         #size of each feature map must be (B, NOUT, H/16, W/16)
         #concatenate them along the channel dimension to get
         #(B, NOUT * 5, H/16, W/16)
-        x = torch.cat(pyros, dim=1)
+        x = torch.cat(features, dim=1)
         #(B, NOUT * 5, H/16, W/16) --> (B, NOUT, H/16, W/16)
         return self.drop(self.reduce(x))
     
@@ -246,10 +246,10 @@ class DeepLabV3(nn.Module):
         
     def forward(self, x):
         #run through resnet encoder
-        encoder_features = self.dropout(self.encoder(x))
+        encoder_features = self.encoder(x)
         
         #run the output of the resnet encoder through the aspp layer
-        x = self.aspp(encoder_features[-1])
+        x = self.aspp(self.dropout(encoder_features[-1]))
         
         #apply dropout to the output from layer1 of the encoder resnet
         #and feed it to the decoder along with the output from the aspp module

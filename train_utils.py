@@ -14,10 +14,10 @@ in_notebook = (
     'JPY_PARENT_PID'   in os.environ
 )
 
-if in_notebook:
-    from tqdm.notebook import tqdm
-else:
-    from tqdm import tqdm
+#if in_notebook:
+#    from tqdm.notebook import tqdm
+#else:
+from tqdm import tqdm
     
 class DataFetcher:
     """
@@ -40,12 +40,6 @@ class DataFetcher:
             self.reset_loader()
             batch = next(self.loader_iter)
             
-        return batch
-            
-    def next(self):
-        #load the next batch of data
-        batch = self.load()
-        
         #get the images and masks as cuda float tensors
         images = batch['image'].float().cuda(non_blocking=True)
         masks = batch['mask'].float().cuda(non_blocking=True)
@@ -76,7 +70,10 @@ class Trainer:
         
         self.criterion = criterion
         self.train = DataFetcher(trn_data)
-        self.valid = DataFetcher(val_data)
+        if val_data is not None:
+            self.valid = DataFetcher(val_data)
+        else:
+            self.valid = None
         
         self.trn_losses = []
         self.val_losses = []
@@ -124,7 +121,7 @@ class Trainer:
             self.resume(resume)
             
         #move the model to cuda
-        self.model = model.cuda()
+        self.model = self.model.cuda()
         print('Moved model to cuda device')
         
         #if no eval iters are given, use 1 epoch as evaluation period
@@ -133,12 +130,12 @@ class Trainer:
         
         #wrap the optimizer in the OneCycleLR policy
         last_iter = self.scheduler.last_epoch
-        last_iter = 1 if last_iter == -1 else last_iter
+        last_iter = 1 if last_iter == 0 else last_iter
 
         loss_meter = EMAMeter()
         iou_meter = EMAMeter()
         for ix in tqdm(range(last_iter, total_iters + 1), file=sys.stdout):
-            images, masks = self.train.next()
+            images, masks = self.train.load()
             
             #run a training step
             self.model.train()
@@ -157,7 +154,7 @@ class Trainer:
             
             #record loss and iou
             loss_meter.update(loss.item())
-            iou_meter.update(calculate_iou(output.detch(), masks.detach()))
+            iou_meter.update(calculate_iou(output.detach(), masks.detach()))
 
             if (ix % eval_iters == 0):
                 #print the training loss and ious and reset the meters
@@ -167,7 +164,7 @@ class Trainer:
                 iou_meter.reset()
                 
                 #run evaluation step if there is validation data
-                if self.val_data is not None:
+                if self.valid is not None:
                     rl = self.evaluate()
 
                 #save the current training state
@@ -184,10 +181,10 @@ class Trainer:
         iou_meter = AverageMeter()
         
         self.model.eval()
-        for _ in range(len(self.val_data)):
+        for _ in range(len(self.valid)):
             with torch.no_grad(): #necessary to prevent CUDA memory errors
                 #load the next batch of validation data
-                images, masks = val_iter.next()
+                images, masks = self.valid.load()
                 
                 #forward pass in eval mode
                 output = self.model(images)
@@ -195,7 +192,7 @@ class Trainer:
                 
                 #record loss and iou
                 loss_meter.update(loss.item())
-                iou_meter.update(calculate_iou(output.detch(), masks.detach()))
+                iou_meter.update(calculate_iou(output.detach(), masks.detach()))
                 
         #print the loss and iou, no need to reset the meters
         print(f'valid_loss: {loss_meter.avg}')

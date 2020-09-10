@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 from albumentations import Compose, Normalize
 from albumentations.pytorch import ToTensorV2
 
-sys.path.append('../')
+sys.path.append('./')
 from deeplab import DeepLabV3
 
 def parse_args():
@@ -77,6 +77,7 @@ if __name__ == "__main__":
     #load the model file and get the weights
     state = torch.load(weight_path, map_location='cpu')['model']
     model.load_state_dict(state)
+    model = model.cuda()
     print(f'Loaded weights from {weight_path}')
     
     #set scaling factor based on number of axes

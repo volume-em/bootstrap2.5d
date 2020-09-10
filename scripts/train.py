@@ -9,8 +9,7 @@ from albumentations import (
 )
 from albumentations.pytorch import ToTensorV2
 
-#assumes the python modules are in the up directory from scripts
-sys.path.append('../')
+sys.path.append('./')
 from losses import BootstrapDiceLoss
 from deeplab import DeepLabV3
 from data import SegmentationData
@@ -76,7 +75,7 @@ if __name__ == "__main__":
     #channels such that there are 3 (RGB)
     tfs = Compose([
         PadIfNeeded(min_height=224, min_width=224),
-        CropNonEmptyMaskIfExists(256, 256, p=0.8)
+        CropNonEmptyMaskIfExists(224, 224, p=0.8),
         RandomResizedCrop(224, 224, (0.6, 1.0)),
         RandomBrightnessContrast(),
         #Rotate(),
@@ -94,18 +93,17 @@ if __name__ == "__main__":
         ToTensorV2()
     ])
 
-
     #create pytorch datasets
     #use the batch size that we defined in the arguments
     #but the batch size should not be greater than the number 
     #of images in the trn_data
-    trn_data = SegmentationData(os.path.join(data_path, 'train'), tfs)
+    trn_data = SegmentationData(data_path, tfs)
     bsz = min(bsz, len(trn_data))
     train = DataLoader(trn_data, batch_size=bsz, shuffle=True, pin_memory=True, num_workers=8, drop_last=True)
     
     #make validation loader, if validation data exists
-    if os.path.exists(os.path.join(data_path, 'valid')):
-        val_data = SegmentationData(os.path.join(data_path, 'valid'), tfs)
+    if os.path.exists(data_path.replace('train2d', 'valid2d')) and 'train2d' in data_path:
+        val_data = SegmentationData(data_path.replace('train2d', 'valid2d'), tfs)
         valid = DataLoader(val_data, batch_size=1, shuffle=False, pin_memory=True, num_workers=8, drop_last=False)
     else:
         valid = None
@@ -135,4 +133,6 @@ if __name__ == "__main__":
     #train the model with one cycle policy
     cudnn.benchmark = True
     trainer = Trainer(model, optim, criterion, train, valid)
+    
+    resume = None if resume == '' else resume
     trainer.train_one_cycle(iters, lr, iters // 10, save_path=save_path, resume=resume)

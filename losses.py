@@ -44,7 +44,6 @@ class BootstrapDiceLoss(nn.Module):
         super(BootstrapDiceLoss, self).__init__()
         self.beta = beta
         self.eps = eps
-        self.dice_loss = DiceLoss(eps=eps)
         self.mode = mode
         
     def forward(self, output, target):
