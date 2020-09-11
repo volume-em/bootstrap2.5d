@@ -89,9 +89,8 @@ The directory structure and pipeline hyperparameters can easily be modified by e
 
 ## Citation
 If you use this code, please cite our paper:
-```
-@article{conrad_lee_narayan_2020, title={Enforcing Prediction Consistency Across Orthogonal Planes Significantly Improves Segmentation of FIB-SEM Image Volumes by 2D Neural Networks.}, DOI={10.1017/S143192762002053X}, journal={Microscopy and Microanalysis}, publisher={Cambridge University Press}, author={Conrad, Ryan and Lee, Hanbin and Narayan, Kedar}, year={2020}, pages={1–4}}
-```
+
+Conrad, R., Lee, H., & Narayan, K. (2020). Enforcing Prediction Consistency Across Orthogonal Planes Significantly Improves Segmentation of FIB-SEM Image Volumes by 2D Neural Networks. Microscopy and Microanalysis, 1-4. doi:10.1017/S143192762002053X
 
 ## Acknowledgements
 
