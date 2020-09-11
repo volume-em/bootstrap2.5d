@@ -2,21 +2,6 @@ import os, sys
 import torch
 from torch.optim.lr_scheduler import OneCycleLR
 from metrics import EMAMeter, AverageMeter, calculate_iou
-
-#we want to use the right version of tqdm based on the 
-#environment, if imported in a jupyter notebook we use
-#tqdm_notebook
-program_name = os.path.basename(os.getenv('_', ''))
-
-in_notebook = (
-    'jupyter-notebook' in program_name or
-    'ipython'          in program_name or
-    'JPY_PARENT_PID'   in os.environ
-)
-
-#if in_notebook:
-#    from tqdm.notebook import tqdm
-#else:
 from tqdm import tqdm
     
 class DataFetcher:

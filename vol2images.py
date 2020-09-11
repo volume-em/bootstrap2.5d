@@ -16,6 +16,8 @@ def parse_args():
                         help='Spacing between image slices')
     parser.add_argument('-eval_frac', 'eval_frac', dest='eval_frac', type=float, metavar='eval_frac', default=0.15,
                         help='Fraction of total images and masks to use for validation dataset [0, 1]')
+    parser.add_argument('-eval_path', 'eval_path', dest='eval_path', type=str, metavar='eval_path', default="",
+                        help='Directory in which to save validation images and masks')
     
     args = vars(parser.parse_args())
     return args
@@ -43,6 +45,7 @@ if __name__ == "__main__":
     axes = args['axes']
     spacing = args['spacing']
     eval_frac = args['eval_frac']
+    eval_path = args['eval_path']
         
     #create save_path
     #if is does not already exist
@@ -66,6 +69,7 @@ if __name__ == "__main__":
         labelmap = sitk.ReadImage(mskpath)
         
         assert(image.GetPixelID() == 1), f"{impath} is not 8-bit unsigned integer!"
+        assert(image.GetSize() == labelmap.GetSize()), f"{impath} and {mskpath} volumes are not the same (x, y, z) shape!"
 
         #establish a filename prefix from the impath
         exp_name = '.'.join(impath.split('/')[-1].split('.')[:-1])
@@ -92,11 +96,10 @@ if __name__ == "__main__":
                 sitk.WriteImage(labelmap_slice, os.path.join(os.path.join(train_path, 'masks'), slice_name))
                 
     #create validation directories
-    if eval_frac > 0:
-        valid_path = train_path.replace('train2d', 'valid2d')
-        os.mkdir(valid_path)
-        os.mkdir(os.path.join(valid_path, 'images'))
-        os.mkdir(os.path.join(valid_path, 'masks'))
+    if eval_frac > 0 and eval_path != "":
+        os.mkdir(eval_path)
+        os.mkdir(os.path.join(eval_path, 'images'))
+        os.mkdir(os.path.join(eval_path, 'masks'))
 
         #get the list of images and masks in train directory
         train_images = np.sort(glob(os.path.join(train_path, 'images/*.tiff')))
@@ -105,7 +108,6 @@ if __name__ == "__main__":
         #create a mask to randomly select images
         mask = np.random.random(len(train_images)) < eval_frac
         for imp, mskp in zip(train_images[mask], train_masks[mask]):
-            assert(imp.replace('images', 'kitty') == mskp.replace('masks', 'kitty'))
             os.rename(imp, imp.replace('train', 'valid'))
             os.rename(mskp, mskp.replace('train', 'valid'))
 
