@@ -86,3 +86,13 @@ snakemake --delete-all-output
 ### Modifying the Snakefile
 
 The directory structure and pipeline hyperparameters can easily be modified by editing the Snakefile. Detailed comments in the file explain the purpose of each parameter.
+
+## Citation
+If you use this code, please cite our paper:
+```
+@article{conrad_lee_narayan_2020, title={Enforcing Prediction Consistency Across Orthogonal Planes Significantly Improves Segmentation of FIB-SEM Image Volumes by 2D Neural Networks.}, DOI={10.1017/S143192762002053X}, journal={Microscopy and Microanalysis}, publisher={Cambridge University Press}, author={Conrad, Ryan and Lee, Hanbin and Narayan, Kedar}, year={2020}, pages={1–4}}
+```
+
+## Acknowledgements
+
+This project was funded in part with Federal funds from the National Cancer Institute, National Institutes of Health, under Contract No. HHSN261200800001E. The content of this publication does not necessarily reflect the views or policies of the Department of Health and Human Services, nor does mention of trade names, commercial products, or organizations imply endorsement by the U.S. Government. 
