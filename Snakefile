@@ -1,19 +1,44 @@
 import os
 
-SCRIPT_PATH = "scripts/"
+#Location of the vol2images.py, train.py and orthoplane_inf.py scripts
+#By default they are in the same directory as the Snakefile
+SCRIPT_PATH = ""
 
+#Directory containing training and target data volumes
 DATA_PATH = "data/"
+
+#Directory in which to save pytorch models
 MODEL_PATH = "models/"
 
-TRAIN_PATCHES_PATH = DATA_PATH + "train2d/" #location to save 2d training images
-TRAINING_IMDIR = DATA_PATH + "train/images/" #directory containing training image volumes
-TRAINING_MSKDIR = DATA_PATH + "train/masks/" #directory containing training label volumes
+#vol2images.py script slices a volume along xy, yz, xz planes and
+#creates 2d images for each cross section; these cross sections
+#are saved in the paths below
+TRAIN_PATCHES_PATH = DATA_PATH + "train2d/" 
 
-TARGET_PATCHES_PATH = DATA_PATH + "target2d/" #location to save 2d noisy ground truth images
-TARGET_IMDIR = DATA_PATH + "target/images/" #directory containing target image volumes
-TARGET_PRED_SUPER_DIR = DATA_PATH + "target/super_preds/" #directory to save supervised prediction volumes
-TARGET_PRED_WEAKSUPER_DIR = DATA_PATH + "target/weaksuper_preds/" #directory to save weakly supervised prediction volumes
+#Directory for saving some cross sections for validation instead of training
+VALID_PATCHES_PATH = DATA_PATH + "valid2d/"
 
+#Directory containing training image volumes
+TRAINING_IMDIR = DATA_PATH + "train/images/"
+
+#Directory containing training label volumes
+TRAINING_MSKDIR = DATA_PATH + "train/masks/" 
+
+#Directory to save 2d noisy ground truth masks and 2d cross sections
+#of the target image volume
+TARGET_PATCHES_PATH = DATA_PATH + "target2d/" 
+
+#Directory containing target image volumes
+TARGET_IMDIR = DATA_PATH + "target/images/" 
+
+#Directory to save supervised prediction volumes (output of Step 1)
+TARGET_PRED_SUPER_DIR = DATA_PATH + "target/super_preds/" 
+
+#Directory to save weakly supervised prediction volumes (output of Step 2)
+TARGET_PRED_WEAKSUPER_DIR = DATA_PATH + "target/weaksuper_preds/"
+
+#Resnet architecture to use as the DeepLab encoder
+#choice of resnet18, resnet34, or resnet50
 RESNET_ARCH = "resnet34"
 
 rule all:
@@ -22,24 +47,10 @@ rule all:
         TARGET_PRED_WEAKSUPER_DIR
 
         
-#----------------------------------
-# SUPERVISED
-#----------------------------------
+#--------------------------------------------
+# SUPERVISED Training and Inference -- Step 1
+#--------------------------------------------
 
-"""
-
-take the volumes in imdir and mskdir and save the 2d cross sections to PATCHES_PATH
-this script/rule assumes a directory structure like:
-data/
-    images/
-        volume1.tiff
-        volume2.tiff
-    masks/
-        volume1.tiff
-        volume2.tiff
-imdir = data/images/ and mskdir = data/masks/
-
-"""
 rule train_data_to_patches:
     input:
         TRAINING_IMDIR,
@@ -47,9 +58,11 @@ rule train_data_to_patches:
     params:
         axes = [0, 1, 2],
         spacing = 1,
-        eval_frac = 0.15
+        eval_frac = 0.15,
+        eval_path = VALID_PATCHES_PATH
     output:
-        directory(TRAIN_PATCHES_PATH)
+        directory(TRAIN_PATCHES_PATH),
+        directory(VALID_PATCHES_PATH)
     script:
         SCRIPT_PATH + "vol2images.py"
         
@@ -87,9 +100,9 @@ rule orthoplane_inf_supervised:
         SCRIPT_PATH + "orthoplane_inf.py"
         
         
-#----------------------------------
-# WEAKLY SUPERVISED
-#----------------------------------
+#---------------------------------------------------
+# WEAKLY SUPERVISED Training and Inference -- Step 2
+#---------------------------------------------------
 
 rule target_data_to_patches:
     input:
@@ -98,7 +111,8 @@ rule target_data_to_patches:
     params:
         axes = [0, 1, 2],
         spacing = 1,
-        eval_frac = 0.0 #validation data is meaningless in this step, because there isn't a real ground truth
+        eval_frac = 0.0, #validation data is meaningless in this step, because there isn't a real ground truth
+        eval_path = ""
     output:
         directory(TARGET_PATCHES_PATH)
     script:
