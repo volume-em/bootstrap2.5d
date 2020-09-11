@@ -1,0 +1,12 @@
+name: boot
+channels:
+  - defaults
+dependencies:
+  - numpy
+  - albumentations
+  - simpleitk
+  - torchvision
+  - cudatoolkit=10.2
+  - pytorch
+  - snakemake-minimal
+prefix: /data/conradrw/conda/envs/boot

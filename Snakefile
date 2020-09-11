@@ -73,7 +73,7 @@ rule train_supervised:
         n = 1, #number of segmentation classes in the mask
         lr = 3e-3, #maximum learning rate in OneCycle policy
         wd = 0.1, #weight decay
-        iters = 1000, #total training iterations
+        iters = 100, #total training iterations
         bsz = 64, #batch size, no smaller than 16
         p = 0.5, #dropout probability
         beta = 1, #no bootstrapping
@@ -125,7 +125,7 @@ rule train_weakly_supervised:
         n = 1, #number of segmentation classes in the mask
         lr = 3e-3, #maximum learning rate in OneCycle policy
         wd = 0.1, #weight decay
-        iters = 1000, #total training iterations
+        iters = 100, #total training iterations
         bsz = 64, #batch size, no smaller than 16
         p = 0.5, #dropout probability
         beta = 1, #no bootstrapping
