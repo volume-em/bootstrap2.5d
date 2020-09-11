@@ -70,7 +70,6 @@ rm -r data/target/weaksuper_preds/
 To remove all outputs from the entire pipeline run:
 ```
 snakemake --delete-all-output
-rm -r data/valid2d/
 ```
 
 ### Modifying the Snakefile
