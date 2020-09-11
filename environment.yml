@@ -1,6 +1,8 @@
 name: boot
 channels:
   - defaults
+  - conda-forge
+  - bioconda
 dependencies:
   - numpy
   - albumentations

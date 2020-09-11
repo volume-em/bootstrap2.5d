@@ -16,6 +16,10 @@ Then create a conda environment from the environment.yml file.
 ```
 conda env create -f environment.yml
 ```
+To activate the environment, use:
+```
+conda activate boot
+```
 
 ## Using this code
 
