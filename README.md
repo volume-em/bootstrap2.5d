@@ -43,7 +43,7 @@ mkdir data/target/images/
 
 ### Load datasets
 
-Next, move training image and labelmap volumes into the data/train/images and data/train/masks directories, respectively. Note that the image and labelmap volume files must have exactly the same names and must have 8-bit unsigned voxels. Lastly, move a target image volume for segmentation into the data/target/images directory. Multiple volumes can be in each directory, training/inference will be applied to each as a group. See [here](https://simpleitk.readthedocs.io/en/master/IO.html) for a list of supported file formats.
+Next, move training image and labelmap volumes into the ```data/train/images/``` and ```data/train/masks/``` directories, respectively. Note that the image and labelmap volume files must have exactly the same names and must have 8-bit unsigned voxels. Lastly, move a target image volume for segmentation into the ```data/target/images/``` directory. Multiple volumes can be in each directory, training and inference will be applied to each as a group. See [here](https://simpleitk.readthedocs.io/en/master/IO.html) for a list of supported file formats.
 
 The directory structure will look something like this:
 ```
@@ -73,11 +73,11 @@ snakemake
 
 ### Ouptut files
 
-The Snakefile has multiple outputs. The most important are the pytorch model state dicts and predicted segmentation volumes. The model state dicts will appear in the models/ directory. One will be called supervised.pth and the other called weakly_supervised.pth (these names should be obvious after reading the paper). The predicted segmentation volumes will appear in the target/ directory under super_preds/ and weaksuper_preds/.
+The Snakefile has multiple outputs. The most important are the pytorch model state dicts and predicted segmentation volumes. The model state dicts will appear in the ```models``` directory. One will be called ```supervised.pth``` and the other called ```weakly_supervised.pth``` (these names should be obvious after reading the paper). The predicted segmentation volumes will appear in the ```target``` directory under ```super_preds``` and ```weaksuper_preds```.
 
 ### Clear Snakemake Outputs and Rerun
 
-To rerun the Snakefile with different data or hyperparameters, it may be necessary to remove all previously generated snakemake results. This can be done manually if only certain output need to be modified. For example, to repredict the weaksuper_preds/ only, just remove that directory:
+To rerun the Snakefile with different data or hyperparameters, it may be necessary to remove all previously generated snakemake results. This can be done manually if only certain output need to be modified. For example, to repredict ```weaksuper_preds``` only, just remove that directory:
 ```
 rm -r data/target/weaksuper_preds/
 ```
@@ -98,4 +98,4 @@ Conrad, R., Lee, H., & Narayan, K. (2020). Enforcing Prediction Consistency Acro
 
 ## Acknowledgements
 
-This project was funded in part with Federal funds from the National Cancer Institute, National Institutes of Health, under Contract No. HHSN261200800001E. The content of this publication does not necessarily reflect the views or policies of the Department of Health and Human Services, nor does mention of trade names, commercial products, or organizations imply endorsement by the U.S. Government. 
+This project was funded in part with Federal funds from the National Cancer Institute, National Institutes of Health, under Contract No. HHSN261200800001E. The content of this code repository does not necessarily reflect the views or policies of the Department of Health and Human Services, nor does mention of trade names, commercial products, or organizations imply endorsement by the U.S. Government. 
