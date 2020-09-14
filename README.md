@@ -3,7 +3,7 @@ Code for the paper: [Enforcing Prediction Consistency Across Orthogonal Planes S
 
 ## Dependencies
 
-By default, this code is designed to run with an NVidia GPU; it will not work on CPU-only machines without modification. The code was tested on Ubuntu 18.04 with Python 3.8.
+By default, this code is designed to run with an Nvidia GPU; it will not work on CPU-only machines without modification. The code was tested on Ubuntu 18.04 with Python 3.8.
 
 We recommend using conda for managing the python environment and installing all necessary packages to run this code. For detailed instructions see [here](https://conda.io/projects/conda/en/latest/user-guide/install/linux.html). 
 
