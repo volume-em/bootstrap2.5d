@@ -41,6 +41,9 @@ TARGET_PRED_WEAKSUPER_DIR = DATA_PATH + "target/weaksuper_preds/"
 #choice of resnet18, resnet34, or resnet50
 RESNET_ARCH = "resnet34"
 
+#Number of classes in the segmentation mask
+N_CLASSES = 1
+
 rule all:
     input:
         TARGET_PRED_SUPER_DIR,
@@ -70,7 +73,7 @@ rule train_supervised:
     input:
         TRAIN_PATCHES_PATH
     params:
-        n = 1, #number of segmentation classes in the mask
+        n = N_CLASSES, #number of segmentation classes in the mask
         lr = 3e-3, #maximum learning rate in OneCycle policy
         wd = 0.1, #weight decay
         iters = 1000, #total training iterations
@@ -122,7 +125,7 @@ rule train_weakly_supervised:
     input:
         TARGET_PATCHES_PATH
     params:
-        n = 1, #number of segmentation classes in the mask
+        n = N_CLASSES, #number of segmentation classes in the mask
         lr = 3e-3, #maximum learning rate in OneCycle policy
         wd = 0.1, #weight decay
         iters = 1000, #total training iterations
