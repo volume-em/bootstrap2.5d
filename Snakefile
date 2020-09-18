@@ -131,7 +131,7 @@ rule train_weakly_supervised:
         iters = 1000, #total training iterations
         bsz = 64, #batch size, no smaller than 16
         p = 0.5, #dropout probability
-        beta = 1, #no bootstrapping
+        beta = 0.8, #with bootstrapping
         resnet_arch = RESNET_ARCH, #resnet18, resnet34, or resnet50
         ft_layer = "layer4", #all, layer1, layer2, layer3, layer4, or none.
         resume = "" #resuming is not compatible with scripts run by Snakemake
