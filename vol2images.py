@@ -97,7 +97,7 @@ if __name__ == "__main__":
                 
     #create validation directories
     if eval_frac > 0 and eval_path != "":
-        os.mkdir(eval_path)
+        os.makedirs(eval_path, exist_ok=True)
         os.mkdir(os.path.join(eval_path, 'images'))
         os.mkdir(os.path.join(eval_path, 'masks'))
 
