@@ -91,6 +91,12 @@ snakemake --delete-all-output
 
 The directory structure and pipeline hyperparameters can easily be modified by editing the Snakefile. Detailed comments in the file explain the purpose of each parameter.
 
+### Running in Google Colab
+
+The pipeline can be run in the cloud using Google Colab. Anyone with a Google account can use Colab for free, albeit with some [resource limits](https://research.google.com/colaboratory/faq.html#resource-limits). Without a Google account the code can still be viewed and downloaded, but a sign-in is required to edit and execute. The button below will open a new tab with the notebook opened in Colab.
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/volume-em/bootstrap2.5d/blob/colab/demo.ipynb)
+
 ## Citation
 If you use this code, please cite our paper:
 
