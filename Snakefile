@@ -93,7 +93,7 @@ rule orthoplane_inf_supervised:
         TARGET_IMDIR,
         os.path.join(MODEL_PATH, "supervised.pth")
     params:
-        n = 1, #number of segmentation classes in the mask
+        n = N_CLASSES, #number of segmentation classes in the mask
         axes = [0, 1, 2],
         threshold = 0.1, 
         resnet_arch = RESNET_ARCH #resnet18, resnet34, or resnet50
@@ -145,7 +145,7 @@ rule orthoplane_inf_weakly_supervised:
         TARGET_IMDIR,
         os.path.join(MODEL_PATH, "weakly_supervised.pth")
     params:
-        n = 1, #number of segmentation classes in the mask
+        n = N_CLASSES, #number of segmentation classes in the mask
         axes = [0, 1, 2],
         threshold = 0.5, 
         resnet_arch = RESNET_ARCH #resnet18, resnet34, or resnet50
