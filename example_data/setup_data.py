@@ -17,7 +17,7 @@ if __name__ == "__main__":
     
     # Download the UroCell dataset
     script_path = os.path.join(os.path.dirname(__file__), 'download_example.sh')
-    command = f'bash {script_path}'
+    command = f'bash {script_path} {data_dir}'
     subprocess.call(command.split(' '))
     
     # Convert images from float type to uint8

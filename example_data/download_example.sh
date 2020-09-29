@@ -1,22 +1,11 @@
 #!/bin/bash
 
-# Create models and data directories
-mkdir -p models;
-mkdir -p data;
-mkdir -p data/train;
-    mkdir -p data/train/images;
-    mkdir -p data/train/masks;
-mkdir -p data/target;
-    mkdir -p data/target/images;
-
 # Create directory variables
-urocell_data_dir="data";
+urocell_data_dir=$1;
     target_dir="${urocell_data_dir}/target/";
         target_img_dir="${urocell_data_dir}/target/images";
-        target_msk_dir="${urocell_data_dir}/target/masks";
     train_dir="${urocell_data_dir}/train";
         train_img_dir="${train_dir}/images";
-        train_msk_dir="${train_dir}/masks";
 
 # Create lyso and mito directories
 train_lyso_dir=$train_dir/lyso; mkdir -p $train_lyso_dir
