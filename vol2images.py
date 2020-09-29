@@ -50,6 +50,7 @@ if __name__ == "__main__":
     #create save_path
     #if is does not already exist
     train_path = save_path
+    os.makedirs(train_path, exist_ok=True)
     os.mkdir(os.path.join(train_path, 'images'))
     os.mkdir(os.path.join(train_path, 'masks'))
     
