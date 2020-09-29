@@ -67,7 +67,7 @@ rule train_data_to_patches:
         directory(TRAIN_PATCHES_PATH),
         directory(VALID_PATCHES_PATH)
     script:
-        SCRIPT_PATH + "vol2images.py"
+        os.path.join(SCRIPT_PATH, "vol2images.py")
         
 rule train_supervised:
     input:
@@ -86,7 +86,7 @@ rule train_supervised:
     output:
         os.path.join(MODEL_PATH, "supervised.pth")
     script:
-        SCRIPT_PATH + "train.py"
+        os.path.join(SCRIPT_PATH, "train.py")
         
 rule orthoplane_inf_supervised:
     input:
@@ -100,7 +100,7 @@ rule orthoplane_inf_supervised:
     output:
         directory(TARGET_PRED_SUPER_DIR),
     script:
-        SCRIPT_PATH + "orthoplane_inf.py"
+        os.path.join(SCRIPT_PATH, "orthoplane_inf.py")
         
         
 #---------------------------------------------------
@@ -119,7 +119,7 @@ rule target_data_to_patches:
     output:
         directory(TARGET_PATCHES_PATH)
     script:
-        SCRIPT_PATH + "vol2images.py"
+        os.path.join(SCRIPT_PATH, "vol2images.py")
         
 rule train_weakly_supervised:
     input:
@@ -138,7 +138,7 @@ rule train_weakly_supervised:
     output:
         os.path.join(MODEL_PATH, "weakly_supervised.pth")
     script:
-        SCRIPT_PATH + "train.py"
+        os.path.join(SCRIPT_PATH, "train.py")
         
 rule orthoplane_inf_weakly_supervised:
     input:
@@ -152,4 +152,4 @@ rule orthoplane_inf_weakly_supervised:
     output:
         directory(TARGET_PRED_WEAKSUPER_DIR),
     script:
-        SCRIPT_PATH + "orthoplane_inf.py"
+        os.path.join(SCRIPT_PATH, "orthoplane_inf.py")
