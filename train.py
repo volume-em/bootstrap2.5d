@@ -9,7 +9,7 @@ from albumentations import (
 )
 from albumentations.pytorch import ToTensorV2
 
-sys.path.append('./src')
+sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 from losses import BootstrapDiceLoss
 from deeplab import DeepLabV3
 from data import SegmentationData

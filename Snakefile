@@ -5,44 +5,44 @@ import os
 SCRIPT_PATH = ""
 
 #Directory containing training and target data volumes
-DATA_PATH = "data/"
+DATA_PATH = config['data_dir']
 
 #Directory in which to save pytorch models
-MODEL_PATH = "models/"
+MODEL_PATH = config['model_dir']
 
 #vol2images.py script slices a volume along xy, yz, xz planes and
 #creates 2d images for each cross section; these cross sections
 #are saved in the paths below
-TRAIN_PATCHES_PATH = DATA_PATH + "train2d/" 
+TRAIN_PATCHES_PATH = os.path.join(DATA_PATH, "train2d")
 
 #Directory for saving some cross sections for validation instead of training
-VALID_PATCHES_PATH = DATA_PATH + "valid2d/"
+VALID_PATCHES_PATH = os.path.join(DATA_PATH, "valid2d")
 
 #Directory containing training image volumes
-TRAINING_IMDIR = DATA_PATH + "train/images/"
+TRAINING_IMDIR = os.path.join(DATA_PATH, "train/images")
 
 #Directory containing training label volumes
-TRAINING_MSKDIR = DATA_PATH + "train/masks/" 
+TRAINING_MSKDIR = os.path.join(DATA_PATH, "train/masks") 
 
 #Directory to save 2d noisy ground truth masks and 2d cross sections
 #of the target image volume
-TARGET_PATCHES_PATH = DATA_PATH + "target2d/" 
+TARGET_PATCHES_PATH = os.path.join(DATA_PATH, "target2d") 
 
 #Directory containing target image volumes
-TARGET_IMDIR = DATA_PATH + "target/images/" 
+TARGET_IMDIR = os.path.join(DATA_PATH, "target/images") 
 
 #Directory to save supervised prediction volumes (output of Step 1)
-TARGET_PRED_SUPER_DIR = DATA_PATH + "target/super_preds/" 
+TARGET_PRED_SUPER_DIR = os.path.join(DATA_PATH, "target/super_preds") 
 
 #Directory to save weakly supervised prediction volumes (output of Step 2)
-TARGET_PRED_WEAKSUPER_DIR = DATA_PATH + "target/weaksuper_preds/"
+TARGET_PRED_WEAKSUPER_DIR = os.path.join(DATA_PATH, "target/weaksuper_preds")
 
 #Resnet architecture to use as the DeepLab encoder
 #choice of resnet18, resnet34, or resnet50
 RESNET_ARCH = "resnet34"
 
 #Number of classes in the segmentation mask
-N_CLASSES = 1
+N_CLASSES = config['n_classes']
 
 rule all:
     input:
@@ -67,7 +67,7 @@ rule train_data_to_patches:
         directory(TRAIN_PATCHES_PATH),
         directory(VALID_PATCHES_PATH)
     script:
-        SCRIPT_PATH + "vol2images.py"
+        os.path.join(SCRIPT_PATH, "vol2images.py")
         
 rule train_supervised:
     input:
@@ -76,7 +76,7 @@ rule train_supervised:
         n = N_CLASSES, #number of segmentation classes in the mask
         lr = 3e-3, #maximum learning rate in OneCycle policy
         wd = 0.1, #weight decay
-        iters = 1000, #total training iterations
+        iters = 500, #total training iterations
         bsz = 64, #batch size, no smaller than 16
         p = 0.5, #dropout probability
         beta = 1, #no bootstrapping
@@ -86,21 +86,21 @@ rule train_supervised:
     output:
         os.path.join(MODEL_PATH, "supervised.pth")
     script:
-        SCRIPT_PATH + "train.py"
+        os.path.join(SCRIPT_PATH, "train.py")
         
 rule orthoplane_inf_supervised:
     input:
         TARGET_IMDIR,
         os.path.join(MODEL_PATH, "supervised.pth")
     params:
-        n = 1, #number of segmentation classes in the mask
+        n = N_CLASSES, #number of segmentation classes in the mask
         axes = [0, 1, 2],
         threshold = 0.1, 
         resnet_arch = RESNET_ARCH #resnet18, resnet34, or resnet50
     output:
         directory(TARGET_PRED_SUPER_DIR),
     script:
-        SCRIPT_PATH + "orthoplane_inf.py"
+        os.path.join(SCRIPT_PATH, "orthoplane_inf.py")
         
         
 #---------------------------------------------------
@@ -119,7 +119,7 @@ rule target_data_to_patches:
     output:
         directory(TARGET_PATCHES_PATH)
     script:
-        SCRIPT_PATH + "vol2images.py"
+        os.path.join(SCRIPT_PATH, "vol2images.py")
         
 rule train_weakly_supervised:
     input:
@@ -128,7 +128,7 @@ rule train_weakly_supervised:
         n = N_CLASSES, #number of segmentation classes in the mask
         lr = 3e-3, #maximum learning rate in OneCycle policy
         wd = 0.1, #weight decay
-        iters = 1000, #total training iterations
+        iters = 500, #total training iterations
         bsz = 64, #batch size, no smaller than 16
         p = 0.5, #dropout probability
         beta = 0.8, #with bootstrapping
@@ -138,18 +138,18 @@ rule train_weakly_supervised:
     output:
         os.path.join(MODEL_PATH, "weakly_supervised.pth")
     script:
-        SCRIPT_PATH + "train.py"
+        os.path.join(SCRIPT_PATH, "train.py")
         
 rule orthoplane_inf_weakly_supervised:
     input:
         TARGET_IMDIR,
         os.path.join(MODEL_PATH, "weakly_supervised.pth")
     params:
-        n = 1, #number of segmentation classes in the mask
+        n = N_CLASSES, #number of segmentation classes in the mask
         axes = [0, 1, 2],
         threshold = 0.5, 
         resnet_arch = RESNET_ARCH #resnet18, resnet34, or resnet50
     output:
         directory(TARGET_PRED_WEAKSUPER_DIR),
     script:
-        SCRIPT_PATH + "orthoplane_inf.py"
+        os.path.join(SCRIPT_PATH, "orthoplane_inf.py")

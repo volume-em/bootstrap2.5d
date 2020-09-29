@@ -50,6 +50,7 @@ if __name__ == "__main__":
     #create save_path
     #if is does not already exist
     train_path = save_path
+    os.makedirs(train_path, exist_ok=True)
     os.mkdir(os.path.join(train_path, 'images'))
     os.mkdir(os.path.join(train_path, 'masks'))
     
@@ -97,7 +98,7 @@ if __name__ == "__main__":
                 
     #create validation directories
     if eval_frac > 0 and eval_path != "":
-        os.mkdir(eval_path)
+        os.makedirs(eval_path, exist_ok=True)
         os.mkdir(os.path.join(eval_path, 'images'))
         os.mkdir(os.path.join(eval_path, 'masks'))
 

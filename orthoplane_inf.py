@@ -8,7 +8,7 @@ from glob import glob
 from albumentations import Compose, Normalize
 from albumentations.pytorch import ToTensorV2
 
-sys.path.append('./src')
+sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 from deeplab import DeepLabV3
 
 def parse_args():
