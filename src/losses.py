@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 class BootstrapDiceLoss(nn.Module):
     """
@@ -52,9 +53,6 @@ class BootstrapDiceLoss(nn.Module):
         if target.ndim == output.ndim - 1:
             target = target.unsqueeze(1)
             
-        assert(output.size() == target.size()), \
-        "Output and target tensors must have the same size!"
-            
         #get the number of classes from the output channels
         n_classes = output.shape[1]
         #1 output channel (i.e. binary classification) needs to be considered 
@@ -66,8 +64,11 @@ class BootstrapDiceLoss(nn.Module):
         empty_dims = (1,) * (target.ndim - 2)
         
         #one-hot encode the target (B, 1, H, W) --> (B, N, H, W)
-        k = torch.arange(0, 2).view(1, 2, *empty_dims).to(target.device)
+        k = torch.arange(0, n_classes).view(1, n_classes, *empty_dims).to(target.device)
         target = (target == k)
+
+        assert(output.size() == target.size()), \
+        "Output and target tensors must have the same size!"
             
         #convert output logits to probabilities using sigmoid for binary
         #classification and softmax for mutliclass
