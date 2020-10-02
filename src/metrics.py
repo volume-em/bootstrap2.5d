@@ -68,6 +68,7 @@ def calculate_iou(output, target):
         max_idx = torch.argmax(output, 1, keepdim=True) #(B, 1, H, W)
 
         #one hot encoder the target and output
+        target = target.long()
         target_onehot = torch.zeros_like(target)
         target = target_onehot.scatter(1, target, 1)
         output_onehot = torch.zeros_like(output)
