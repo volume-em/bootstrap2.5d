@@ -67,12 +67,11 @@ def calculate_iou(output, target):
         output = nn.Softmax(dim=1)(output) #(B, NC, H, W)
         max_idx = torch.argmax(output, 1, keepdim=True) #(B, 1, H, W)
 
-        #one hot encoder the target and output
-        target = target.long()
-        target_onehot = torch.zeros_like(target)
-        target = target_onehot.scatter(1, target, 1)
+        #one hot encode the target and output
+        k = torch.arange(0, n_classes).view(1, n_classes, *empty_dims).to(target.device)
+        target = (target == k)
         output_onehot = torch.zeros_like(output)
-        output = output_onehot.scatter(1, max_idx, 1)
+        output_onehot.scatter_(1, max_idx, 1)
     else:
         #just sigmoid the output
         output = (nn.Sigmoid()(output) > 0.5).long()
