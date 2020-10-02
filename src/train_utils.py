@@ -143,6 +143,8 @@ class Trainer:
 
             if (ix % eval_iters == 0):
                 #print the training loss and ious and reset the meters
+                #print a newline to get more space below progress bar
+                print('\n')
                 print(f'train_loss: {loss_meter.avg}')
                 print(f'train_mean_iou: {iou_meter.avg}')
                 loss_meter.reset()
