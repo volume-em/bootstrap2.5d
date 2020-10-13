@@ -27,9 +27,9 @@ if __name__ == "__main__":
         
         #for two of the volumes we need to crop out some
         #regions of low-quality data
-        if ip.split('/')[-1] == 'fib1-0-0-0.nii.gz':
+        if impath.split('/')[-1] == 'fib1-0-0-0.nii.gz':
             image = image[:, 12:]
-        elif ip.split('/')[-1] == 'fib1-1-0-3.nii.gz':
+        elif impath.split('/')[-1] == 'fib1-1-0-3.nii.gz':
             image = image[:, 54:]
         
         sitk.WriteImage(image, impath)
