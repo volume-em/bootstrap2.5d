@@ -23,7 +23,16 @@ if __name__ == "__main__":
     # Convert images from float type to uint8
     impaths = glob(os.path.join(data_dir, 'train/images/*.nii.gz')) + glob(os.path.join(data_dir, 'target/images/*.nii.gz'))
     for impath in impaths:
-        sitk.WriteImage(sitk.Cast(sitk.ReadImage(impath), sitk.sitkUInt8), impath)
+        image = sitk.Cast(sitk.ReadImage(impath), sitk.sitkUInt8)
+        
+        #for two of the volumes we need to crop out some
+        #regions of low-quality data
+        if ip.split('/')[-1] == 'fib1-0-0-0.nii.gz':
+            image = image[:, 12:]
+        elif ip.split('/')[-1] == 'fib1-1-0-3.nii.gz':
+            image = image[:, 54:]
+        
+        sitk.WriteImage(image, impath)
     
     print('Creating mask volumes...')
     # Get paths of the mito and lyso labelmap volumes
@@ -39,6 +48,13 @@ if __name__ == "__main__":
 
         # Add them together into a single label volume such that 1 == lyso & 2 == mito
         labelmap = lyso + 2 * mito
+        
+        #for two of the volumes we need to crop out some
+        #regions of low-quality data
+        if lp.split('/')[-1] == 'fib1-0-0-0.nii.gz':
+            labelmap = labelmap[:, 12:]
+        elif lp.split('/')[-1] == 'fib1-1-0-3.nii.gz':
+            labelmap = labelmap[:, 54:]
 
         # Make sure the datatype is uint8
         labelmap = sitk.Cast(labelmap, sitk.sitkUInt8)
