@@ -66,9 +66,6 @@ class BootstrapDiceLoss(nn.Module):
         #one-hot encode the target (B, 1, H, W) --> (B, N, H, W)
         k = torch.arange(0, n_classes).view(1, n_classes, *empty_dims).to(target.device)
         target = (target == k)
-
-        assert(output.size() == target.size()), \
-        "Output and target tensors must have the same size!"
             
         #convert output logits to probabilities using sigmoid for binary
         #classification and softmax for mutliclass
