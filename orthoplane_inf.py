@@ -80,6 +80,11 @@ if __name__ == "__main__":
     #set scaling factor based on number of axes
     scaling = int(255 / len(axes))
     
+    #if we're working with a single class
+    #use the threshold, otherwise use the
+    #argmax of softmax
+    threshold = int(255 * threshold)
+    
     #loop through the found image volumes
     for impath in impaths:
         print(f'Evaluating volume {impath}...')
@@ -135,11 +140,7 @@ if __name__ == "__main__":
                         prediction_volume[:, :, index] += prediction
                     else:
                         prediction_volume[:, :, :, index] += prediction
-
-        #if we're working with a single class
-        #use the threshold, otherwise use the
-        #argmax of softmax
-        threshold = int(255 * threshold)
+                        
         if num_classes == 1:
             prediction_volume = (prediction_volume > threshold).astype(np.uint8)[0]
         else:
